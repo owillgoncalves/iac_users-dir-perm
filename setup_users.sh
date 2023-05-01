@@ -2,33 +2,25 @@
 
 source config.sh
 
-echo "Criando grupos..."
+echo "Criando grupos e diretórios e definindo permissões..."
 
-for group in "${groups_dirs[@]}"; do
-    	IFS=":" read group _ <<< "$group"
+for group_dir in "${groups_dirs[@]}"; do
+    	IFS=":" read group dir <<< "$group_dir"
     	groupadd "$group"
+	mkdir "$dir"
+	chown root:root "$dir"
+	chgrp "$group" "$dir"
+	chmod 770 "$dir"
 done
+
+mkdir /publica
+chown root:root /publica
+chmod 777 /publica
 
 echo "Criando usuários..."
 
 for user in "${users[@]}"; do
     	IFS=":" read username name groupname <<< "$user"
-    	useradd -m -s /bin/bash -p $(openssl passwd -6 Senha123) -g "$groupname" "$username"
+    	useradd -m -s /bin/bash -c "$name" -p $(openssl passwd -6 Senha123) -g "$groupname" "$username"
     	passwd "$username" -e >/dev/null
 done
-
-echo "Criando diretórios..."
-
-mkdir /publica /adm /ven /sec
-
-echo "Definindo permissões..."
-
-chown root:root /publica /adm /ven /sec
-
-for group in "${groups_dirs[@]}"; do
-        IFS=":" read group dir <<< "$group"
-        chgrp "$group" "$dir"
-	chmod 770 "$dir"
-done
-
-chmod 777 /publica
